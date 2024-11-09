@@ -24,11 +24,24 @@ A Node.js native module for controlling media playback and system audio. Built w
 > This is a work in progress. API might change rapidly between releases.
 > Right now only Windows is supported.
 
-[TODO]
+```bash
+npm install @ultimateshadsform/universal-media
+```
 
 ## Usage 📖
 
-[TODO]
+```typescript
+import { getMediaInfo, getThumbnail } from '@ultimateshadsform/universal-media';
+import fs from 'fs';
+
+const mediaInfo = getMediaInfo();
+const thumbnail = getThumbnail();
+
+console.log(mediaInfo); // { title: 'Song Title', artist: 'Artist Name', album: 'Album Name', playbackStatus: 'playing', hasThumbnail: true }
+
+const thumbnailBuffer = Buffer.from(thumbnail);
+fs.writeFileSync('thumbnail.png', thumbnailBuffer);
+```
 
 ## Contributing 🤝
 
