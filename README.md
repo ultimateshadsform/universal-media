@@ -30,10 +30,9 @@ A Node.js native module for controlling media playback and system audio. Built w
 
 [TODO]
 
-## Todo 📝
+## Contributing 🤝
 
-- [ ] Implement individual application volume control
-- [ ] Implement Linux/MacOS support
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License 📄
 
