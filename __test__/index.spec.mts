@@ -13,9 +13,6 @@ import {
   getSystemMute,
 } from '../index.js';
 
-// Helper function to wait
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 // Media Info and Thumbnail
 it('should get media info', async () => {
   const info = getMediaInfo();
@@ -41,12 +38,10 @@ it('should get thumbnail if available', async () => {
 it('should execute full playback sequence', async () => {
   // Initial play
   expect(await play()).toBe(true);
-  await wait(1000);
   const initialInfo = getMediaInfo();
 
   // Next track
   expect(await next()).toBe(true);
-  await wait(1000);
   const afterNextInfo = getMediaInfo();
 
   if (initialInfo && afterNextInfo) {
@@ -69,11 +64,8 @@ it('should execute full playback sequence', async () => {
 
   // Test pause/play/stop
   expect(await pause()).toBe(true);
-  await wait(500);
   expect(await previous()).toBe(true);
-  await wait(500);
   expect(await play()).toBe(true);
-  await wait(500);
   expect(await stop()).toBe(true);
 });
 
@@ -88,7 +80,6 @@ it('should handle volume controls', async () => {
   // Try to set a different volume
   const newVolume = initialVolume < 0.5 ? 0.8 : 0.2;
   expect(await setSystemVolume(newVolume)).toBe(true);
-  await wait(1000);
 
   const changedVolume = await getSystemVolume();
   if (changedVolume === null) {
@@ -111,7 +102,6 @@ it('should handle invalid volume values', async () => {
 it('should handle mute controls', async () => {
   // First try to unmute
   expect(await setSystemMute(false)).toBe(true);
-  await wait(500);
 
   const initialMuteState = await getSystemMute();
   if (initialMuteState === null) {
@@ -121,21 +111,16 @@ it('should handle mute controls', async () => {
 
   // Test mute sequence
   expect(await setSystemMute(true)).toBe(true);
-  await wait(500);
   expect(await getSystemMute()).toBe(true);
 
   expect(await setSystemMute(false)).toBe(true);
-  await wait(500);
   expect(await getSystemMute()).toBe(false);
 });
 
 it('should handle rapid state changes', async () => {
   expect(await play()).toBe(true);
-  await wait(200);
   expect(await pause()).toBe(true);
-  await wait(200);
   expect(await play()).toBe(true);
-  await wait(200);
   expect(await stop()).toBe(true);
 
   const info = getMediaInfo();
@@ -151,7 +136,6 @@ it('should handle volume control stress test', async () => {
   for (let i = 0; i < 5; i++) {
     const volume = Math.random();
     expect(await setSystemVolume(volume)).toBe(true);
-    await wait(200);
   }
 
   const finalVolume = await getSystemVolume();
