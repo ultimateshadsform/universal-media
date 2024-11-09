@@ -1,6 +1,7 @@
 {
-  "name": "universal-media-win32-x64-msvc",
-  "version": "0.0.2-alpha.3",
+  "name": "@ultimateshadsform/universal-media-win32-x64-msvc",
+  "description": "Get Media Info from OS using native bindings for Node.js",
+  "version": "0.0.2-alpha.5",
   "os": [
     "win32"
   ],
@@ -10,6 +11,13 @@
   "main": "universal-media.win32-x64-msvc.node",
   "files": [
     "universal-media.win32-x64-msvc.node"
+  ],
+  "keywords": [
+    "media",
+    "media-info",
+    "media-metadata",
+    "media-info-node",
+    "windows-media"
   ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",

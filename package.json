@@ -1,7 +1,7 @@
 {
   "name": "@ultimateshadsform/universal-media",
   "displayName": "Get Media Info from OS using native bindings for Node.js",
-  "version": "0.0.2-alpha.3",
+  "version": "0.0.2-alpha.5",
   "author": "SHADXW",
   "keywords": [
     "media",
@@ -28,12 +28,15 @@
       "additional": [
         "x86_64-pc-windows-msvc"
       ]
-    }
+    },
+    "directory": "npm"
   },
   "license": "MIT",
   "devDependencies": {
     "@napi-rs/cli": "^2.18.4",
-    "ava": "^6.0.1"
+    "@types/node": "^22.9.0",
+    "ava": "^6.0.1",
+    "bun-types": "^1.1.34"
   },
   "ava": {
     "timeout": "3m"
@@ -42,16 +45,14 @@
     "node": ">= 10"
   },
   "scripts": {
-    "artifacts": "napi artifacts",
-    "build": "napi build --platform --release",
+    "build": "bun scripts/build.ts",
     "build:debug": "napi build --platform",
-    "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "universal": "napi universal",
     "version": "napi version"
   },
   "optionalDependencies": {
-    "@ultimateshadsform/universal-media-win32-x64-msvc": "0.0.2-alpha.3"
+    "@ultimateshadsform/universal-media-win32-x64-msvc": "0.0.2-alpha.5"
   },
   "files": [
     "index.js",
