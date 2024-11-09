@@ -1,4 +1,4 @@
-import { it, expect, describe } from 'vitest';
+import { it, expect, test } from 'vitest';
 import {
   getMediaInfo,
   getThumbnail,
@@ -20,10 +20,10 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 it('should get media info', async () => {
   const info = getMediaInfo();
   if (info !== null) {
-    expect('playbackStatus' in info).toBe(true);
-    expect('hasThumbnail' in info).toBe(true);
+    expect(info).toHaveProperty('playbackStatus');
+    expect(info).toHaveProperty('hasThumbnail');
   } else {
-    expect(true).toBe(true);
+    test.skip('No media info available');
   }
 });
 
@@ -33,7 +33,7 @@ it('should get thumbnail if available', async () => {
     expect(Array.isArray(thumbnail)).toBe(true);
     expect(thumbnail.every((byte) => byte >= 0 && byte <= 255)).toBe(true);
   } else {
-    expect(true).toBe(true);
+    test.skip('No thumbnail available');
   }
 });
 
@@ -50,24 +50,21 @@ it('should execute full playback sequence', async () => {
   const afterNextInfo = getMediaInfo();
 
   if (initialInfo && afterNextInfo) {
-    try {
-      // Check if any media info property changed
-      const trackChanged =
-        initialInfo.title !== afterNextInfo.title ||
-        initialInfo.artist !== afterNextInfo.artist ||
-        initialInfo.album !== afterNextInfo.album ||
-        initialInfo.albumArtist !== afterNextInfo.albumArtist;
+    // Check if any media info property changed
+    const trackChanged =
+      initialInfo.title !== afterNextInfo.title ||
+      initialInfo.artist !== afterNextInfo.artist ||
+      initialInfo.album !== afterNextInfo.album ||
+      initialInfo.albumArtist !== afterNextInfo.albumArtist;
 
-      if (!trackChanged) {
-        expect(true).toBe(true);
-      } else {
-        expect(trackChanged).toBe(true);
-      }
-    } catch (error: any) {
-      expect(true).toBe(true);
+    // Only assert if we expect track to change
+    if (trackChanged) {
+      expect(trackChanged).toBe(true);
+    } else {
+      test.skip('Track did not change - may be expected behavior');
     }
   } else {
-    expect(true).toBe(true);
+    test.skip('Media info not available');
   }
 
   // Test pause/play/stop
@@ -82,10 +79,9 @@ it('should execute full playback sequence', async () => {
 
 // Volume Controls
 it('should handle volume controls', async () => {
-  // Get initial volume
   const initialVolume = await getSystemVolume();
   if (initialVolume === null) {
-    expect(true).toBe(true);
+    test.skip('System volume control not available');
     return;
   }
 
@@ -94,12 +90,12 @@ it('should handle volume controls', async () => {
   expect(await setSystemVolume(newVolume)).toBe(true);
   await wait(1000);
 
-  // Verify volume changed from initial value
   const changedVolume = await getSystemVolume();
   if (changedVolume === null) {
-    expect(true).toBe(true);
+    test.skip('Could not verify volume change');
     return;
   }
+
   const volumeDiffFromInitial = Math.abs(changedVolume - initialVolume);
   expect(volumeDiffFromInitial > 0.1).toBe(true);
 
@@ -119,7 +115,7 @@ it('should handle mute controls', async () => {
 
   const initialMuteState = await getSystemMute();
   if (initialMuteState === null) {
-    expect(true).toBe(true);
+    test.skip('System mute control not available');
     return;
   }
 
@@ -144,9 +140,9 @@ it('should handle rapid state changes', async () => {
 
   const info = getMediaInfo();
   if (info === null) {
-    expect(true).toBe(true);
+    test.skip('Media info not available');
   } else {
-    expect(info).not.toBe(null);
+    expect(info).toHaveProperty('playbackStatus');
   }
 });
 
@@ -162,14 +158,15 @@ it('should handle volume control stress test', async () => {
   const finalMute = await getSystemMute();
 
   if (finalVolume === null) {
-    expect(true).toBe(true);
+    test.skip('Volume control not available');
   } else {
-    expect(finalVolume >= 0 && finalVolume <= 1).toBe(true);
+    expect(finalVolume).toBeGreaterThanOrEqual(0);
+    expect(finalVolume).toBeLessThanOrEqual(1);
   }
 
   if (finalMute === null) {
-    expect(true).toBe(true);
+    test.skip('Mute control not available');
   } else {
-    expect(typeof finalMute === 'boolean').toBe(true);
+    expect(typeof finalMute).toBe('boolean');
   }
 });
