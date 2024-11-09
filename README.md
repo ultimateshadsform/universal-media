@@ -1,6 +1,6 @@
-# win-media 🎵
+# universal-media 🎵
 
-A Node.js native module for controlling Windows media playback and system audio. Built with Rust and Windows API.
+A Node.js native module for controlling media playback and system audio. Built with Rust and OS specific APIs.
 
 ## Features 🚀
 
@@ -16,16 +16,24 @@ A Node.js native module for controlling Windows media playback and system audio.
 
 - Get/Set system volume 🎚️
 - Get/Set system mute status 🔇
-- Control individual application volumes 🎛️
-- Control audio endpoints 🎧
+- [TODO] Control individual application volumes 🎛️
 
 ## Installation 📦
+
+> [!NOTE]
+> This is a work in progress. API might change rapidly between releases.
+> Right now only Windows is supported.
 
 [TODO]
 
 ## Usage 📖
 
 [TODO]
+
+## Todo 📝
+
+- [ ] Implement individual application volume control
+- [ ] Implement Linux/MacOS support
 
 ## License 📄
 

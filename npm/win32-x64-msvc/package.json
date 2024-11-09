@@ -1,15 +1,15 @@
 {
-  "name": "win-media-win32-x64-msvc",
-  "version": "0.0.0",
+  "name": "universal-media-win32-x64-msvc",
+  "version": "0.0.2-alpha.1",
   "os": [
     "win32"
   ],
   "cpu": [
     "x64"
   ],
-  "main": "win-media.win32-x64-msvc.node",
+  "main": "universal-media.win32-x64-msvc.node",
   "files": [
-    "win-media.win32-x64-msvc.node"
+    "universal-media.win32-x64-msvc.node"
   ],
   "license": "MIT",
   "engines": {

@@ -1,0 +1,243 @@
+name: CI
+env:
+  DEBUG: napi:*
+  APP_NAME: universal-media
+  MACOSX_DEPLOYMENT_TARGET: '10.13'
+permissions:
+  contents: write
+  id-token: write
+'on':
+  push:
+    branches:
+      - main
+    tags-ignore:
+      - '**'
+    paths-ignore:
+      - '**/*.md'
+      - LICENSE
+      - '**/*.gitignore'
+      - .editorconfig
+      - docs/**
+  pull_request: null
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        settings:
+          - host: windows-latest
+            build: bun run build --target x86_64-pc-windows-msvc
+            target: x86_64-pc-windows-msvc
+    name: stable - ${{ matrix.settings.target }} - node@20
+    runs-on: ${{ matrix.settings.host }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Install
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.settings.target }}
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            .cargo-cache
+            target/
+          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.host }}
+      - name: Install dependencies
+        run: bun install
+      - name: Build
+        run: ${{ matrix.settings.build }}
+        shell: bash
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: ${{ env.APP_NAME }}.*.node
+          if-no-files-found: error
+
+  test-windows-binding:
+    name: Test bindings on Windows - node@${{ matrix.node }}
+    needs:
+      - build
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - '18'
+          - '20'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bindings-x86_64-pc-windows-msvc
+          path: .
+      - name: Print current audio devices
+        shell: powershell
+        run: Get-CimInstance Win32_SoundDevice | fl *
+      - name: Start Windows Audio Service
+        shell: powershell
+        run: |
+          net start audiosrv
+          Start-Sleep -Seconds 2  # Give audio service time to initialize
+      - name: Setup Virtual Audio
+        id: setup_audio
+        shell: powershell
+        timeout-minutes: 5
+        run: |
+          # Download and extract Scream 4.0
+          Invoke-WebRequest https://github.com/duncanthrax/scream/releases/download/4.0/Scream4.0.zip -OutFile C:\Scream4.0.zip
+          Expand-Archive -Path C:\Scream4.0.zip -DestinationPath C:\Scream
+
+          # Disable time sync services with force and dependency handling
+          $timeServices = @(
+              "vmictimesync",  # Hyper-V Time Sync
+              "W32Time",       # Windows Time
+              "tzautoupdate"   # Auto Time Zone Updater
+          )
+
+          foreach ($service in $timeServices) {
+              if (Get-Service $service -ErrorAction SilentlyContinue) {
+                  Stop-Service $service -Force -ErrorAction SilentlyContinue
+                  Set-Service $service -StartupType Disabled -ErrorAction SilentlyContinue
+              }
+          }
+
+          # Set time back
+          Set-Date (Get-Date "2023-07-04 12:00:00")
+
+          # Import existing certificate
+          $cert = (Get-AuthenticodeSignature C:\Scream\Install\driver\x64\Scream.sys).SignerCertificate
+          $store = [System.Security.Cryptography.X509Certificates.X509Store]::new("TrustedPublisher", "LocalMachine")
+          $store.Open("ReadWrite")
+          $store.Add($cert)
+          $store.Close()
+
+          # Install driver
+          cd C:\Scream\Install\driver\x64
+          C:\Scream\Install\helpers\devcon-x64.exe install Scream.inf *Scream
+
+          if ($LASTEXITCODE -ne 0) {
+              Write-Error "Failed to install Scream driver"
+              exit 1
+          }
+
+          # Restore time services
+          foreach ($service in $timeServices) {
+              if (Get-Service $service -ErrorAction SilentlyContinue) {
+                  Set-Service $service -StartupType Automatic
+                  Start-Service $service -ErrorAction SilentlyContinue
+              }
+          }
+
+          # Force time resync
+          w32tm /resync /force
+          $currentDate = Get-Date
+          Write-Host "Current Date: $currentDate"
+
+      - name: Check Setup Timeout
+        if: steps.setup_audio.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::error::Virtual Audio Setup timed out after 5 minutes or failed to complete"
+          exit 1
+
+      - name: Print audio devices after setup
+        shell: powershell
+        run: Get-CimInstance Win32_SoundDevice | fl *
+      - name: Setup foobar2000
+        shell: powershell
+        run: |
+          # Download latest stable foobar2000 x64
+          Invoke-WebRequest "https://www.foobar2000.org/files/foobar2000-x64_v2.1.6.exe" -OutFile foobar2000_installer.exe
+
+          # Install silently
+          Start-Process -FilePath .\foobar2000_installer.exe -ArgumentList "/S" -Wait
+
+          # Create directory for tracks
+          New-Item -ItemType Directory -Path ".github\workflows\tracks" -Force
+
+          # Copy tracks
+          Copy-Item ".github\workflows\kalimba.mp3" ".github\workflows\tracks\track1.mp3"
+          Copy-Item ".github\workflows\kalimba.mp3" ".github\workflows\tracks\track2.mp3"
+          Copy-Item ".github\workflows\kalimba.mp3" ".github\workflows\tracks\track3.mp3"
+
+          # Create playlist file with full paths
+          $tracks = Get-ChildItem ".github\workflows\tracks\*.mp3" | Select-Object -ExpandProperty FullName
+          $tracks | Out-File -FilePath "playlist.m3u" -Encoding utf8
+
+      - name: Play test audio
+        shell: powershell
+        run: |
+          # Start foobar2000 with playlist
+          Start-Process "C:\Program Files\foobar2000\foobar2000.exe" -ArgumentList "/play", "/immediate", "$pwd\playlist.m3u"
+          Start-Sleep -Seconds 5
+
+      - name: Test bindings
+        env:
+          CI_AUDIO: true
+          CI: true
+        run: bun run test
+
+      - name: Cleanup audio
+        if: always()
+        shell: powershell
+        run: |
+          Stop-Process -Name foobar2000 -Force -ErrorAction SilentlyContinue
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs:
+      - test-windows-binding
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: |
+          bun install
+          bun install -g @napi-rs/cli
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Move artifacts
+        run: bun run artifacts
+      - name: List packages
+        run: ls -R ./npm
+        shell: bash
+      - name: Publish
+        run: |
+          # Create bunfig.toml with npm auth configuration
+          cat << EOF > bunfig.toml
+          [install]
+          registry = { url = "https://registry.npmjs.org", token = "${NPM_TOKEN}" }
+          EOF
+
+          if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+-" || git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$";
+          then
+            echo "Publishing to npm..."
+            bun publish --access public
+          else
+            echo "Not a release, skipping publish"
+          fi
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

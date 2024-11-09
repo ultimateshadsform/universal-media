@@ -56,7 +56,7 @@ test('should execute full playback sequence', async (t) => {
         initialInfo.title !== afterNextInfo.title ||
         initialInfo.artist !== afterNextInfo.artist ||
         initialInfo.album !== afterNextInfo.album ||
-        initialInfo.album_artist !== afterNextInfo.album_artist;
+        initialInfo.albumArtist !== afterNextInfo.albumArtist;
       
       if (!trackChanged) {
         t.pass('No track change detected - might be at end of playlist')
