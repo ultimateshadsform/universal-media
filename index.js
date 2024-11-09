@@ -310,8 +310,12 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { getMediaInfo, getThumbnail, play, pause, next, previous, stop, setSystemVolume, getSystemVolume, setSystemMute, getSystemMute } = nativeBinding
+const { EventType, subscribeToEvents, ErrorStatus, customError, getMediaInfo, getThumbnail, play, pause, next, previous, stop, setSystemVolume, getSystemVolume, setSystemMute, getSystemMute } = nativeBinding
 
+module.exports.EventType = EventType
+module.exports.subscribeToEvents = subscribeToEvents
+module.exports.ErrorStatus = ErrorStatus
+module.exports.customError = customError
 module.exports.getMediaInfo = getMediaInfo
 module.exports.getThumbnail = getThumbnail
 module.exports.play = play

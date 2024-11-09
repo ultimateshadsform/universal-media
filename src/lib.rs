@@ -2,9 +2,16 @@
 
 mod audio_controller;
 mod session;
+mod events;
 
 pub use audio_controller::{AudioController, CoinitMode};
 pub use session::{Session, ApplicationSession, EndPointSession};
+pub use events::{
+    subscribe_to_events, 
+    EventType, 
+    EventData,
+    ErrorStatus
+};
 
 use napi_derive::napi;
 use windows::{
@@ -27,6 +34,7 @@ use windows::{
 
 /// Information about the currently playing media
 #[napi(object)]
+#[derive(Clone)]
 pub struct MediaInfo {
     /// The title of the media
     pub title: Option<String>,

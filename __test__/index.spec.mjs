@@ -11,6 +11,8 @@ import {
   getSystemVolume,
   setSystemMute,
   getSystemMute,
+  customError,
+  ErrorStatus,
 } from '../index.js'
 
 // Helper function to wait
