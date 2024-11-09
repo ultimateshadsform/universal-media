@@ -3,11 +3,22 @@
   "displayName": "Get Media Info from OS using native bindings for Node.js",
   "version": "0.0.2-alpha.1",
   "author": "SHADXW",
+  "keywords": [
+    "media",
+    "media-info",
+    "media-metadata",
+    "media-info-node",
+    "windows-media"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ultimateshadsform/universal-media.git"
   },
   "homepage": "https://github.com/ultimateshadsform/universal-media",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
   "main": "index.js",
   "types": "index.d.ts",
   "napi": {
